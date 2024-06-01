@@ -1,19 +1,33 @@
 import jwt from 'jsonwebtoken';
 
-export const verifyToken = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1]; 
+export const verifyAdmin = async (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
 
-  if (token) {
-      jwt.verify(token, 'secretkey', (err, decoded) => {
-          if (err) {
-              return res.status(401).json({ message: 'Unauthorized' });
-          } else {
-              
-              req.user = decoded; 
-              next(); 
-          }
+  console.log(token, "token");
+
+  if (!token) {
+    return res.status(403).json({
+      message: "Access denied. No token provided.",
+      statusCode: 403,
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRE);
+    if (!decoded.isAdmin) {
+      return res.status(403).json({
+        message: "Access denied. Admins only.",
+        statusCode: 403,
       });
-  } else {
-      res.status(401).json({ message: 'No token provided' });
+    }
+    req.admin = decoded;
+    t;
+    next();
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    res.status(403).json({
+      message: "Invalid token",
+      statusCode: 403,
+    });
   }
 };
